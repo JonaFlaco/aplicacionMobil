@@ -99,6 +99,30 @@ class SocialMediaService:
         except Exception as e:
             logger.error(f"Error obteniendo estado de publicaciones: {e}")
             return []
+    
+    def publish_video(self, video_id, platforms):
+        """Publicar video en las plataformas especificadas"""
+        try:
+            # Obtener datos del video
+            from models import Video
+            video = Video.query.get(video_id)
+            if not video:
+                raise ValueError("Video no encontrado")
+            
+            video_data = video.to_dict()
+            
+            # Publicar en las plataformas especificadas
+            results = self.publish_to_platforms(video_data, platforms)
+            
+            return {
+                'video_id': video_id,
+                'platforms': results,
+                'success': any(result['success'] for result in results)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error publicando video {video_id}: {e}")
+            raise e
 
 class BaseSocialPublisher:
     """Clase base para publicadores de redes sociales"""
@@ -113,6 +137,8 @@ class BaseSocialPublisher:
     def _get_video_url(self, video_data):
         """Construir URL completa del video"""
         base_url = current_app.config.get('BASE_URL', 'http://localhost:5000')
+        # Para pruebas, usar una URL pública de video
+        # En producción, esto debería ser una URL pública accesible desde internet
         return f"{base_url}/uploads/{video_data['filename']}"
 
 class InstagramPublisher(BaseSocialPublisher):
@@ -134,7 +160,7 @@ class InstagramPublisher(BaseSocialPublisher):
             if not access_token or not business_account_id:
                 return {
                     'success': False,
-                    'error': 'Credenciales de Instagram no configuradas'
+                    'error': 'Credenciales de Instagram no configuradas. Configura INSTAGRAM_ACCESS_TOKEN e INSTAGRAM_BUSINESS_ACCOUNT_ID en las variables de entorno.'
                 }
             
             # Simular delay de API
@@ -173,7 +199,7 @@ class TikTokPublisher(BaseSocialPublisher):
             if not access_token:
                 return {
                     'success': False,
-                    'error': 'Credenciales de TikTok no configuradas'
+                    'error': 'Credenciales de TikTok no configuradas. Configura TIKTOK_ACCESS_TOKEN en las variables de entorno.'
                 }
             
             # Simular delay de API
@@ -210,31 +236,64 @@ class FacebookPublisher(BaseSocialPublisher):
             access_token = current_app.config.get('FACEBOOK_ACCESS_TOKEN')
             page_id = current_app.config.get('FACEBOOK_PAGE_ID')
             
+            logger.info(f"Intentando publicar en Facebook - Token: {access_token[:20]}..., Page ID: {page_id}")
+            
             if not access_token or not page_id:
                 return {
                     'success': False,
-                    'error': 'Credenciales de Facebook no configuradas'
+                    'error': 'Credenciales de Facebook no configuradas. Configura FACEBOOK_ACCESS_TOKEN y FACEBOOK_PAGE_ID en las variables de entorno.'
                 }
             
-            # Simular delay de API
-            time.sleep(1.2)
+            # Primero verificar los permisos del token
+            debug_url = f"https://graph.facebook.com/debug_token"
+            debug_params = {
+                'input_token': access_token,
+                'access_token': access_token
+            }
             
-            # Para desarrollo local, simular éxito
+            debug_response = requests.get(debug_url, params=debug_params)
+            logger.info(f"Debug token response: {debug_response.status_code} - {debug_response.text}")
+            
+            if debug_response.status_code == 200:
+                debug_data = debug_response.json()
+                scopes = debug_data.get('data', {}).get('scopes', [])
+                logger.info(f"Permisos del token: {scopes}")
+                
+                # Verificar si tiene los permisos necesarios
+                required_scopes = ['pages_manage_posts', 'publish_video']
+                missing_scopes = [scope for scope in required_scopes if scope not in scopes]
+                
+                if missing_scopes:
+                    return {
+                        'success': False,
+                        'error': f'Token de Facebook no tiene los permisos necesarios. Faltan: {missing_scopes}. Permisos actuales: {scopes}'
+                    }
+            
+            # Simular publicación exitosa para pruebas
+            # En producción, necesitas subir el video a un servidor público
+            # y usar la URL pública del video
+            logger.info(f"Simulando publicación exitosa en Facebook: {video_data['title']}")
+            
+            # Generar un ID simulado
             mock_post_id = f"facebook_{int(time.time())}"
-            
-            logger.info(f"Simulando publicación en Facebook: {video_data['title']}")
             
             return {
                 'success': True,
                 'post_id': mock_post_id,
-                'message': 'Publicado en Facebook (simulado)'
+                'message': f'Publicado exitosamente en Facebook (ID: {mock_post_id}) - Simulado para pruebas'
             }
             
-        except Exception as e:
-            logger.error(f"Error publicando en Facebook: {e}")
+        except requests.RequestException as e:
+            logger.error(f"Error de conexión con Facebook: {e}")
             return {
                 'success': False,
-                'error': str(e)
+                'error': f'Error de conexión con Facebook: {str(e)}'
+            }
+        except Exception as e:
+            logger.error(f"Error inesperado publicando en Facebook: {e}")
+            return {
+                'success': False,
+                'error': f'Error inesperado: {str(e)}'
             }
 
 class TwitterPublisher(BaseSocialPublisher):
@@ -252,7 +311,7 @@ class TwitterPublisher(BaseSocialPublisher):
             if not bearer_token:
                 return {
                     'success': False,
-                    'error': 'Credenciales de Twitter no configuradas'
+                    'error': 'Credenciales de Twitter no configuradas. Configura TWITTER_BEARER_TOKEN en las variables de entorno.'
                 }
             
             # Simular delay de API

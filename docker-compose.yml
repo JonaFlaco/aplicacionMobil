@@ -12,6 +12,23 @@ services:
       - DATABASE_URL=postgresql://socialman:password123@db:5432/socialman_db
       - UPLOAD_FOLDER=./static/uploads
       - SECRET_KEY=dev-secret-key-change-in-production
+      # Facebook API
+      - FACEBOOK_ACCESS_TOKEN=EAFXcCI5WKqABPHxvoZBYUPVTw22UAmybkePmTZCx1x0e0pj5tjN5bXsQaMp2dHPIEoFYFAM1EEt874YxlPt8K2KCtlSpTDxZAv4JHZB3TClQE9zSV43mfPexVH4EIy3C6QOEEFZBmZC7VJcgCDcAsc8hMZCZBIGSpz7JYaEb6Hp96LaT5iOZBuZAOzEHkia4AmDmenyiZAHJZAoNqEDZACgFTbXZBcENaZCTH1QqZCTqVIQ3zdZA1
+      - FACEBOOK_PAGE_ID=675370979002447
+      
+      # Instagram API
+      - INSTAGRAM_ACCESS_TOKEN=your-instagram-access-token
+      - INSTAGRAM_BUSINESS_ACCOUNT_ID=675370979002447
+      # TikTok API
+      - TIKTOK_ACCESS_TOKEN=your-tiktok-access-token
+      - TIKTOK_CLIENT_KEY=your-tiktok-client-key
+      - TIKTOK_CLIENT_SECRET=your-tiktok-client-secret
+      # Twitter API
+      - TWITTER_API_KEY=your-twitter-api-key
+      - TWITTER_API_SECRET=your-twitter-api-secret
+      - TWITTER_ACCESS_TOKEN=your-twitter-access-token
+      - TWITTER_ACCESS_TOKEN_SECRET=your-twitter-access-token-secret
+      - TWITTER_BEARER_TOKEN=your-twitter-bearer-token
     volumes:
       - uploads_data:/app/static/uploads
     depends_on:

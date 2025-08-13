@@ -3,6 +3,28 @@ let currentVideoId = null;
 let allVideos = [];
 let filteredVideos = [];
 
+// Configuración de la API
+// Detectar automáticamente el entorno
+function getApiBaseUrl() {
+    const hostname = window.location.hostname;
+    const port = window.location.port;
+    
+    // Si estamos en localhost sin puerto específico (Docker), usar el puerto 80
+    if (hostname === 'localhost' && !port) {
+        return ''; // URL relativa para Docker
+    }
+    
+    // Si estamos en Live Server (puerto 5500), usar puerto 5000
+    if (port === '5500') {
+        return 'http://localhost:5000';
+    }
+    
+    // Para otros casos, usar URL relativa
+    return '';
+}
+
+const API_BASE_URL = getApiBaseUrl();
+
 // DOM Elements
 const searchInput = document.getElementById('searchInput');
 const sortSelect = document.getElementById('sortSelect');
@@ -105,7 +127,7 @@ function showSection(sectionName) {
 async function loadVideos() {
     try {
         showLoading();
-        const response = await fetch('/api/videos');
+        const response = await fetch(`${API_BASE_URL}/api/videos`);
         
         if (!response.ok) {
             throw new Error('Error al cargar videos');
@@ -226,7 +248,7 @@ function updateTagFilter() {
 // Modal de video
 async function openVideoModal(videoId) {
     try {
-        const response = await fetch(`/api/videos/${videoId}`);
+        const response = await fetch(`${API_BASE_URL}/api/videos/${videoId}`);
         
         if (!response.ok) {
             throw new Error('Error al cargar video');
@@ -317,21 +339,54 @@ function handleFileSelect() {
 async function handleUpload(e) {
     e.preventDefault();
     
+    console.log('🚀 Iniciando subida de video...');
+    
     const formData = new FormData();
-    formData.append('video', videoFile.files[0]);
-    formData.append('title', document.getElementById('videoTitle').value);
-    formData.append('description', document.getElementById('videoDescription').value);
-    formData.append('tags', document.getElementById('videoTags').value);
+    const videoFile = document.getElementById('videoFile').files[0];
+    const title = document.getElementById('videoTitle').value;
+    const description = document.getElementById('videoDescription').value;
+    const tags = document.getElementById('videoTags').value;
+    
+    console.log('📋 Datos del formulario:');
+    console.log('   - Archivo:', videoFile ? videoFile.name : 'No seleccionado');
+    console.log('   - Título:', title);
+    console.log('   - Descripción:', description);
+    console.log('   - Tags:', tags);
+    console.log('   - API_BASE_URL:', API_BASE_URL);
+    
+    formData.append('video', videoFile);
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('tags', tags);
+    
+    // Verificar contenido del FormData
+    console.log('📦 Contenido del FormData:');
+    for (let [key, value] of formData.entries()) {
+        if (value instanceof File) {
+            console.log(`   - ${key}:`, value.name, `(${value.size} bytes, ${value.type})`);
+        } else {
+            console.log(`   - ${key}:`, value);
+        }
+    }
     
     try {
         showUploadProgress();
         
-        const response = await fetch('/api/videos', {
+        const url = `${API_BASE_URL}/api/videos`;
+        console.log('🌐 URL de la solicitud:', url);
+        
+        const response = await fetch(url, {
             method: 'POST',
             body: formData
         });
         
+        console.log('📥 Respuesta del servidor:');
+        console.log('   - Status:', response.status);
+        console.log('   - Status Text:', response.statusText);
+        console.log('   - Headers:', Object.fromEntries(response.headers.entries()));
+        
         const data = await response.json();
+        console.log('   - Response Data:', data);
         
         if (response.ok) {
             showToast('Video subido exitosamente', 'success');
@@ -339,11 +394,11 @@ async function handleUpload(e) {
             loadVideos();
             showSection('videos');
         } else {
-            throw new Error(data.message || 'Error al subir video');
+            throw new Error(data.message || data.error || 'Error al subir video');
         }
         
     } catch (error) {
-        console.error('Error:', error);
+        console.error('❌ Error en handleUpload:', error);
         showToast(error.message, 'error');
     } finally {
         hideUploadProgress();
@@ -420,7 +475,7 @@ async function publishVideo() {
         publishBtn.disabled = true;
         publishBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publicando...';
         
-        const response = await fetch(`/api/videos/${currentVideoId}/publish`, {
+        const response = await fetch(`${API_BASE_URL}/api/videos/${currentVideoId}/publish`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -476,7 +531,7 @@ async function deleteVideo() {
     }
     
     try {
-        const response = await fetch(`/api/videos/${currentVideoId}/delete`, {
+        const response = await fetch(`${API_BASE_URL}/api/videos/${currentVideoId}/delete`, {
             method: 'DELETE'
         });
         
@@ -499,7 +554,7 @@ async function deleteVideo() {
 // Estadísticas
 async function loadStats() {
     try {
-        const response = await fetch('/api/videos');
+        const response = await fetch(`${API_BASE_URL}/api/videos`);
         
         if (!response.ok) {
             throw new Error('Error al cargar estadísticas');

@@ -23,14 +23,20 @@ COPY requirements.txt .
 # Instalar dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar código fuente
-COPY . .
+# Copiar archivos estáticos primero
+COPY static/ ./static/
 
-# Crear directorio para uploads
+# Copiar templates
+COPY templates/ ./templates/
+
+# Copiar el resto del código fuente
+COPY *.py ./
+COPY services/ ./services/
+COPY config.py ./
+COPY requirements.txt ./
+
+# Crear directorio para uploads si no existe
 RUN mkdir -p static/uploads
-
-# Crear directorio para templates
-RUN mkdir -p templates
 
 # Exponer puerto
 EXPOSE 5000

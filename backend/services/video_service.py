@@ -314,3 +314,36 @@ class VideoService:
             
         except Exception as e:
             raise e
+    
+    def get_statistics(self):
+        """
+        Obtener estadísticas completas de la aplicación
+        """
+        try:
+            stats = self.get_video_stats()
+            popular_tags = self.get_popular_tags(10)
+            
+            return {
+                **stats,
+                'popular_tags': popular_tags
+            }
+        except Exception as e:
+            raise e
+    
+    def get_all_tags(self):
+        """
+        Obtener todos los tags disponibles
+        """
+        try:
+            # Obtener todos los tags únicos de los videos
+            videos = Video.query.filter(Video.tags.isnot(None)).all()
+            all_tags = set()
+            
+            for video in videos:
+                if video.tags:
+                    tags_list = [tag.strip() for tag in video.tags.split(',') if tag.strip()]
+                    all_tags.update(tags_list)
+            
+            return list(all_tags)
+        except Exception as e:
+            raise e
