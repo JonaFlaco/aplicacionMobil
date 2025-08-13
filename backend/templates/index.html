@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SocialMan App - Gestión de Videos para Redes Sociales</title>
+    <!-- <link rel="stylesheet" href="/static/style.css"> -->
+     <link rel="stylesheet" href="../static/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-video"></i>
+                    <h1>SocialMan</h1>
+                </div>
+                <nav class="main-nav">
+                    <button class="nav-btn active" data-section="videos">
+                        <i class="fas fa-play-circle"></i>
+                        Videos
+                    </button>
+                    <button class="nav-btn" data-section="upload">
+                        <i class="fas fa-upload"></i>
+                        Subir Video
+                    </button>
+                    <button class="nav-btn" data-section="analytics">
+                        <i class="fas fa-chart-bar"></i>
+                        Estadísticas
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Videos Section -->
+            <section id="videos-section" class="content-section active">
+                <div class="section-header">
+                    <h2>
+                        <i class="fas fa-video"></i>
+                        Mis Videos
+                    </h2>
+                    <div class="controls">
+                        <div class="search-container">
+                            <input type="text" id="searchInput" placeholder="Buscar videos..." class="search-input">
+                            <i class="fas fa-search search-icon"></i>
+                        </div>
+                        <select id="sortSelect" class="sort-select">
+                            <option value="date-desc">Más recientes</option>
+                            <option value="date-asc">Más antiguos</option>
+                            <option value="title-asc">Título A-Z</option>
+                            <option value="title-desc">Título Z-A</option>
+                        </select>
+                        <select id="tagFilter" class="tag-filter">
+                            <option value="">Todos los tags</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="videosContainer" class="videos-grid">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Cargando videos...
+                    </div>
+                </div>
+
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <i class="fas fa-video-slash"></i>
+                    <h3>No hay videos</h3>
+                    <p>Sube tu primer video para comenzar</p>
+                    <button class="btn btn-primary" onclick="showSection('upload')">
+                        <i class="fas fa-upload"></i>
+                        Subir Video
+                    </button>
+                </div>
+            </section>
+
+            <!-- Upload Section -->
+            <section id="upload-section" class="content-section">
+                <div class="section-header">
+                    <h2>
+                        <i class="fas fa-upload"></i>
+                        Subir Video
+                    </h2>
+                </div>
+
+                <div class="upload-container">
+                    <form id="uploadForm" class="upload-form">
+                        <div class="form-group">
+                            <label for="videoFile" class="file-label">
+                                <div class="file-upload-area" id="fileUploadArea">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <h3>Selecciona un video</h3>
+                                    <p>Arrastra y suelta tu video aquí o haz clic para seleccionar</p>
+                                    <span class="supported-formats">Formatos soportados: MP4, AVI, MOV, WMV, FLV, WEBM</span>
+                                </div>
+                                <input type="file" id="videoFile" accept="video/*" required>
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="videoTitle">Título *</label>
+                            <input type="text" id="videoTitle" required placeholder="Ingresa un título para tu video">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="videoDescription">Descripción</label>
+                            <textarea id="videoDescription" rows="4" placeholder="Describe tu video (opcional)"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="videoTags">Tags</label>
+                            <input type="text" id="videoTags" placeholder="Ingresa tags separados por comas (ej: música, baile, viral)">
+                            <small class="form-help">Los tags ayudan a organizar y encontrar tus videos</small>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="uploadBtn">
+                                <i class="fas fa-upload"></i>
+                                Subir Video
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                                <i class="fas fa-times"></i>
+                                Cancelar
+                            </button>
+                        </div>
+
+                        <div id="uploadProgress" class="upload-progress" style="display: none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill"></div>
+                            </div>
+                            <span class="progress-text">Subiendo...</span>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics-section" class="content-section">
+                <div class="section-header">
+                    <h2>
+                        <i class="fas fa-chart-bar"></i>
+                        Estadísticas
+                    </h2>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalVideos">0</h3>
+                            <p>Videos Subidos</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-hdd"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalSize">0 MB</h3>
+                            <p>Espacio Usado</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalDuration">0 min</h3>
+                            <p>Duración Total</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-share-alt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalPublications">0</h3>
+                            <p>Publicaciones</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="popular-tags">
+                    <h3>Tags Más Populares</h3>
+                    <div id="tagsContainer" class="tags-container">
+                        <!-- Tags se llenarán dinámicamente -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Video Modal -->
+    <div id="videoModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalVideoTitle"></h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="video-player">
+                    <video id="modalVideo" controls>
+                        Tu navegador no soporta el elemento video.
+                    </video>
+                </div>
+                <div class="video-info">
+                    <p><strong>Descripción:</strong> <span id="modalVideoDescription">-</span></p>
+                    <p><strong>Tags:</strong> <span id="modalVideoTags">-</span></p>
+                    <p><strong>Fecha de subida:</strong> <span id="modalVideoDate">-</span></p>
+                </div>
+                <div class="publication-section">
+                    <h4>Publicar en Redes Sociales</h4>
+                    <div class="platform-selection">
+                        <label class="platform-option">
+                            <input type="checkbox" name="platform" value="facebook">
+                            <span class="platform-name">
+                                <i class="fab fa-facebook"></i>
+                                Facebook
+                            </span>
+                        </label>
+                        <label class="platform-option">
+                            <input type="checkbox" name="platform" value="twitter">
+                            <span class="platform-name">
+                                <i class="fab fa-twitter"></i>
+                                X (Twitter)
+                            </span>
+                        </label>
+                    </div>
+                    <button id="publishBtn" class="btn btn-primary" onclick="publishVideo()">
+                        <i class="fas fa-share-alt"></i>
+                        Publicar en Plataformas Seleccionadas
+                    </button>
+                    <div id="publicationStatus" class="publication-status"></div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-danger" onclick="deleteVideo()">
+                    <i class="fas fa-trash"></i>
+                    Eliminar Video
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">
+        <div class="toast-content">
+            <span id="toastMessage"></span>
+            <button class="toast-close" onclick="hideToast()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <script src="../static/script.js"></script>
+</body>
+</html>
+                            <input type="checkbox" name="platform" value="instagram">
+                            <span class="platform-name">
+                                <i class="fab fa-instagram"></i>
+                                Instagram
+                            </span>
+                        </label>
+                        <label class="platform-option">
+                            <input type="checkbox" name="platform" value="tiktok">
+                            <span class="platform-name">
+                                <i class="fab fa-tiktok"></i>
+                                TikTok
+                            </span>
+                        </label>
+                        <label class="platform-option">
